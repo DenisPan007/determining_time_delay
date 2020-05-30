@@ -3,7 +3,6 @@ from point.point import Point
 
 class Grid:
     """Needed to store points on they positions on grid"""
-    structured_grid_points = []
     grid_interval = 0
     x_boundary_left = 0
     x_boundary_right = 0
@@ -11,13 +10,13 @@ class Grid:
     y_boundary_top = 0
 
     def __init__(self, x_boundaries, y_boundaries, amount_of_intervals):
+        self.structured_grid_points = []
         self.x_boundary_left, self.x_boundary_right = x_boundaries
         self.y_boundary_bottom, self.y_boundary_top = y_boundaries
         self.grid_interval = self.get_grid_interval(amount_of_intervals, x_boundaries, y_boundaries)
         self.set_grid_points()
 
     def set_grid_points(self):
-
         x = self.x_boundary_left
         y = self.y_boundary_bottom
         # from left
