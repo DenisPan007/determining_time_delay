@@ -1,30 +1,35 @@
 import matplotlib.pyplot as plt
 import numpy
 
-from util import file_parser, time_delay_handler
+from util import file_parser, time_delay_handler, auto_correlation_method_handler, mutual_information_handler
 from util.grid import Grid
-from plot import plot
 
 
-def plot_attractor_with_border_cells_and_outer_square(grid_cell_points, cell_points_of_figure_boarder, grid_interval):
+def plot_attractor_with_border_cells_and_outer_square(grid_cell_points, cell_points_of_figure_boarder, grid_interval,
+                                                      data_point_list):
     ax = plt.figure().gca()
-    plot.add_grid_lines(ax, grid_cell_points, grid_interval)
-    plot.add_cells_contains_points(ax, cell_points_of_figure_boarder, grid_interval)
-    plot.add_outer_of_figure_border(ax, outer_cells, grid_interval)
+    #  plot.add_grid_lines(ax, g#rid_cell_points, grid_interval)
+    #   plot.add_cells_contains_points(ax, cell_points_of_figure_boarder, grid_interval)
+    # plot.add_outer_of_figure_border(ax, outer_cells, grid_interval)
     plt.plot(data_point_list.get_x_series(), data_point_list.get_y_series(), 'ro', markersize=2)
     plt.xlabel('Time series')
     plt.ylabel('Delayed time series')
-    plt.show()
 
-
-def plot_attractor_square_depends_on_delay():
+def plot_auto_correlation_depends_on_delay(delay_array, auto_correlation_array):
     fig = plt.figure()
     plt.xlabel('Delay (relative)')
-    plt.ylabel('Square of attractor (relative)')
-    plt.title('Rossel')
-    ax = fig.gca()
-    plt.plot(delay_array, square_depends_on_delay, 'ko', markersize=6)
-    plt.show()
+    plt.ylabel('Auto-correlation integral (relative)')
+    plt.title('Auto-correlation function')
+    plt.plot(delay_array, auto_correlation_array, 'ko', markersize=6)
+
+
+def plot_mutual_information_depends_on_delay(delay_array, mutual_information_array):
+    fig = plt.figure()
+    plt.xlabel('Delay (relative)')
+    plt.ylabel('Mutual information (relative)')
+    plt.title('Mutual information function')
+    plt.plot(delay_array, mutual_information_array, 'go', markersize=6)
+
 
 def is_grid_cell_contains_point(cell_left_bottom_coordinates, points_list, interval):
     x_cell, y_cell = cell_left_bottom_coordinates
@@ -34,6 +39,32 @@ def is_grid_cell_contains_point(cell_left_bottom_coordinates, points_list, inter
             return 1
     return 0
 
+
+def plot_methods_of_choosing_delay(delay_array, graphic_method_array, correlation_method_array, mutual_info_array):
+    fig = plt.figure()
+    ax1 = fig.add_subplot(111)
+    ax2 = ax1.twinx()
+    ax3 = ax1.twinx()
+
+    ax1.set_xlabel('Delay')
+
+    ax1.set_ylabel('Square of attractor (relative)')
+    p1, = ax1.plot(delay_array, graphic_method_array, 'ro',label='Graphic', markersize=6)
+
+    ax2.set_ylabel('Auto-correlation (relative)')
+    p2, = ax2.plot(delay_array, [el / 1000 for el in correlation_method_array], 'bo', label='Auto-correlation', markersize=6)
+
+    ax3.set_ylabel('Mutual information (relative)')
+    p3, = ax3.plot(delay_array, mutual_info_array, 'go', label='Mutual information', markersize=6)
+
+    plots = [p1, p2, p3]
+    ax1.legend(handles=plots, loc='center right')
+
+    ax2.spines['right'].set_position(('outward', 60))
+
+    ax1.yaxis.label.set_color(p1.get_color())
+    ax2.yaxis.label.set_color(p2.get_color())
+    ax3.yaxis.label.set_color(p3.get_color())
 
 def get_grid_points_whose_cells_contains_data_points(data_point_list, grid_points, grid_interval):
     result = []
@@ -112,10 +143,12 @@ def get_outer_points_iterating_from_one_grid_side(outer_loop_coordinate_range, i
 
 x_series = file_parser.get_series_from_csv('chua_series.csv')
 square_depends_on_delay = []
+auto_correlation_depends_on_delay_array = []
+mutual_information_depends_on_delay_array = []
 delay_array = []
-for delay in range(1, 40):
+for delay in range(1, 150):
     data_point_list = time_delay_handler.get_points_by_method_of_delay(x_series, delay)
-    grid = Grid(data_point_list.get_x_boundaries(), data_point_list.get_y_boundaries(), 35)
+    grid = Grid(data_point_list.get_x_boundaries(), data_point_list.get_y_boundaries(), 20)
     grid_cell_points = list(numpy.concatenate(grid.structured_grid_points))
     cell_points_of_figure_boarder = get_grid_points_whose_cells_contains_data_points(data_point_list,
                                                                                      grid_cell_points,
@@ -127,6 +160,14 @@ for delay in range(1, 40):
     square_depends_on_delay.append(square)
     delay_array.append(delay)
 
-plot_attractor_square_depends_on_delay()
+    auto_correlation_depends_on_delay_array.append(
+        auto_correlation_method_handler.auto_correlation_integral(x_series, delay))
+    mutual_information_depends_on_delay_array.append(
+        mutual_information_handler.mutual_information_from_series(x_series, delay)
+    )
 
-plot_attractor_with_border_cells_and_outer_square(grid_cell_points, cell_points_of_figure_boarder, grid.grid_interval)
+plot_methods_of_choosing_delay(delay_array, square_depends_on_delay, auto_correlation_depends_on_delay_array, mutual_information_depends_on_delay_array)
+
+plot_attractor_with_border_cells_and_outer_square(grid_cell_points, cell_points_of_figure_boarder, grid.grid_interval,
+                                                  data_point_list)
+plt.show()

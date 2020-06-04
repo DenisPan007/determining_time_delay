@@ -15,7 +15,7 @@ def get_series_without_last_element(series, delay):
 
 
 def get_same_length_series_and_delayed_series(series, delay):
-    return get_series_without_first_element(series, delay), get_series_without_last_element(series, delay)
+    return get_series_without_last_element(series, delay), get_series_without_first_element(series, delay)
 
 def get_points_by_method_of_delay(series, delay):
     series, delayed_series = get_same_length_series_and_delayed_series(series, delay)
